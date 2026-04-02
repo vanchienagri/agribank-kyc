@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Agribank - Đăng ký KH</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+  :root {
+    --green-dark: #005b2f;
+    --green-mid: #007a40;
+    --green-light: #e8f5ee;
+    --gold: #c8960c;
+    --gold-light: #fdf6e3;
+    --text: #1a1a1a;
+    --text-muted: #555;
+    --border: #d0d0d0;
+    --surface: #f7f7f5;
+    --white: #ffffff;
+    --danger: #c0392b;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--surface);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--green-dark);
+    color: white;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  header .logo {
+    width: 40px; height: 40px;
+    background: var(--gold);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 18px; color: white;
+    flex-shrink: 0;
+    letter-spacing: -1px;
+  }
+  header h1 { font-size: 16px; font-weight: 600; line-height: 1.3; }
+  header p { font-size: 12px; opacity: 0.75; }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    background: var(--white);
+    border-bottom: 2px solid var(--border);
+    position: sticky;
+    top: 68px;
+    z-index: 99;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 12px 8px;
+    border: none;
+    background: none;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .tab-btn.active {
+    color: var(--green-dark);
+    border-bottom-color: var(--green-dark);
+  }
+  .tab-icon { font-size: 20px; }
+
+  /* PAGES */
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  /* SCANNER PAGE */
+  .scan-intro {
+    background: var(--green-light);
+    border: 1.5px solid var(--green-mid);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .scan-intro .icon { font-size: 28px; flex-shrink: 0; }
+  .scan-intro h3 { font-size: 14px; font-weight: 600; color: var(--green-dark); }
+  .scan-intro p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+  #reader-container {
+    background: #000;
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 16px;
+  }
+  #reader { width: 100%; }
+
+  .scan-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .scan-frame {
+    width: 200px; height: 200px;
+    border: 3px solid var(--gold);
+    border-radius: 12px;
+    position: relative;
+  }
+  .scan-frame::before, .scan-frame::after,
+  .scan-frame .corner1, .scan-frame .corner2 {
+    content: '';
+    position: absolute;
+    width: 24px; height: 24px;
+    border-color: #fff;
+    border-style: solid;
+  }
+  .scan-frame::before { top: -3px; left: -3px; border-width: 4px 0 0 4px; border-radius: 8px 0 0 0; }
+  .scan-frame::after { top: -3px; right: -3px; border-width: 4px 4px 0 0; border-radius: 0 8px 0 0; }
+  .scan-frame .corner1 { bottom: -3px; left: -3px; border-width: 0 0 4px 4px; border-radius: 0 0 0 8px; }
+  .scan-frame .corner2 { bottom: -3px; right: -3px; border-width: 0 4px 4px 0; border-radius: 0 0 8px 0; }
+
+  .scan-laser {
+    position: absolute;
+    left: 4px; right: 4px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    top: 30%;
+    animation: laser 2s ease-in-out infinite;
+    border-radius: 2px;
+  }
+  @keyframes laser {
+    0%, 100% { top: 10%; opacity: 0.8; }
+    50% { top: 80%; opacity: 1; }
+  }
+
+  #scan-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--green-dark);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.2s;
+  }
+  #scan-btn:active { background: var(--green-mid); }
+  #scan-btn.scanning { background: var(--danger); }
+
+  .manual-input-row {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+  }
+  .manual-input-row input {
+    flex: 1;
+    padding: 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    background: var(--white);
+    color: var(--text);
+  }
+  .manual-input-row button {
+    padding: 12px 16px;
+    background: var(--gold);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* SUCCESS BANNER */
+  #scan-success {
+    display: none;
+    background: #d4edda;
+    border: 1.5px solid #28a745;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #155724;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  /* FORM PAGE */
+  .form-header {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .form-header h2 { font-size: 14px; font-weight: 700; color: var(--green-dark); }
+  .form-header .badge {
+    background: var(--gold-light);
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  .section-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .section-title {
+    background: var(--green-dark);
+    color: white;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-body { padding: 14px 16px; }
+
+  .field-group { margin-bottom: 14px; }
+  .field-group:last-child { margin-bottom: 0; }
+  .field-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .field-label .auto-tag {
+    background: var(--green-light);
+    color: var(--green-dark);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .field-group input, .field-group select, .field-group textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--white);
+    transition: border-color 0.2s;
+    appearance: none;
+  }
+  .field-group input:focus, .field-group select:focus {
+    outline: none;
+    border-color: var(--green-mid);
+  }
+  .field-group input.from-qr {
+    background: var(--green-light);
+    border-color: var(--green-mid);
+    font-weight: 500;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .checkbox-item input { width: auto; margin: 0; }
+
+  /* PRINT BUTTON */
+  .action-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+  }
+  .btn-print {
+    flex: 2;
+    padding: 14px;
+    background: var(--green-dark);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-clear {
+    flex: 1;
+    padding: 14px;
+    background: none;
+    color: var(--danger);
+    border: 1.5px solid var(--danger);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .page-bottom-spacer { height: 80px; }
+
+  /* PRINT STYLES */
+  @media print {
+    header, .tabs, .action-bar, #page-scan, .scan-intro, #scan-btn, .manual-input-row { display: none !important; }
+    .page { display: block !important; padding: 0 !important; }
+    #page-form { display: block !important; }
+    body { background: white; font-size: 13px; }
+    .section-card { box-shadow: none; border: 1px solid #ccc; margin-bottom: 8px; }
+    .section-title { background: #005b2f !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page-bottom-spacer { display: none; }
+    .form-header { box-shadow: none; border: 1px solid #ccc; }
+
+    @page {
+      margin: 15mm 12mm;
+    }
+    .print-header {
+      display: flex !important;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #005b2f;
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+    .print-title { font-size: 16px; font-weight: 800; color: #005b2f; }
+    .print-sub { font-size: 11px; color: #777; }
+  }
+
+  .print-header { display: none; }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #333;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 24px;
+    font-size: 14px;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 9999;
+    white-space: nowrap;
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">AB</div>
+  <div>
+    <h1>Agribank KYC</h1>
+    <p>Đăng ký thông tin khách hàng</p>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('scan')" id="tab-scan">
+    <span class="tab-icon">📷</span>
+    <span>Quét QR</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('form')" id="tab-form">
+    <span class="tab-icon">📋</span>
+    <span>Hồ sơ KH</span>
+  </button>
+</div>
+
+<!-- SCAN PAGE -->
+<div class="page active" id="page-scan">
+  <div class="scan-intro">
+    <div class="icon">🪪</div>
+    <div>
+      <h3>Quét mã QR mặt sau CCCD</h3>
+      <p>Dữ liệu sẽ tự động điền vào mẫu đăng ký khách hàng Mẫu 1A/DVTK-CN</p>
+    </div>
+  </div>
+
+  <div id="scan-success">✅ Quét thành công! Dữ liệu đã được điền vào hồ sơ.</div>
+
+  <div id="reader-container" style="display:none;">
+    <div id="reader"></div>
+    <div class="scan-overlay">
+      <div class="scan-frame">
+        <div class="corner1"></div>
+        <div class="corner2"></div>
+        <div class="scan-laser"></div>
+      </div>
+    </div>
+  </div>
+
+  <button id="scan-btn" onclick="toggleScanner()">
+    <span>📷</span>
+    <span id="scan-btn-text">Bắt đầu quét QR CCCD</span>
+  </button>
+
+  <div style="text-align:center; margin:14px 0; font-size:13px; color:var(--text-muted);">— hoặc nhập thủ công chuỗi QR —</div>
+
+  <div class="manual-input-row">
+    <input type="text" id="manual-qr" placeholder="Dán chuỗi dữ liệu QR vào đây..." />
+    <button onclick="parseManual()">Nhập</button>
+  </div>
+
+  <div style="margin-top:20px; background:var(--gold-light); border:1px solid var(--gold); border-radius:var(--radius); padding:14px 16px;">
+    <p style="font-size:12px; font-weight:700; color:var(--gold); margin-bottom:8px;">📌 Định dạng QR CCCD Việt Nam</p>
+    <code style="font-size:11px; color:#555; word-break:break-all; line-height:1.8;">
+      [Số CCCD] | [Số CMND cũ] | [Họ tên] | [Ngày sinh] | [Giới tính] | [Địa chỉ] | [Ngày hết hạn]
+    </code>
+  </div>
+</div>
+
+<!-- FORM PAGE -->
+<div class="page" id="page-form">
+
+  <div class="print-header">
+    <div>
+      <div class="print-title">MẪU 1A/DVTK-CN</div>
+      <div class="print-sub">Agribank — Đăng ký thông tin khách hàng cá nhân</div>
+    </div>
+    <div style="text-align:right; font-size:11px; color:#777;">
+      <div>Số CIF: _______________</div>
+      <div>Số TKTT: _______________</div>
+    </div>
+  </div>
+
+  <div class="form-header">
+    <div>
+      <h2>MẪU 1A/DVTK-CN</h2>
+      <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">Đăng ký thông tin khách hàng cá nhân</p>
+    </div>
+    <span class="badge">Agribank</span>
+  </div>
+
+  <!-- PHẦN I -->
+  <div class="section-card">
+    <div class="section-title">📌 I. Thông tin khách hàng</div>
+    <div class="section-body">
+
+      <div class="field-group">
+        <div class="field-label">Họ và tên <span class="auto-tag">QR tự động</span></div>
+        <input type="text" id="f-name" placeholder="Nhập họ và tên..." class="from-qr">
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">Ngày sinh <span class="auto-tag">QR</span></div>
+          <input type="text" id="f-dob" placeholder="DD/MM/YYYY" class="from-qr">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Giới tính <span class="auto-tag">QR</span></div>
+          <select id="f-gender">
+            <option value="">-- Chọn --</option>
+            <option value="Nam">Nam</option>
+            <option value="Nữ">Nữ</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Điện thoại di động</div>
+        <input type="tel" id="f-phone" placeholder="Nhập số điện thoại...">
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Email</div>
+        <input type="email" id="f-email" placeholder="Nhập địa chỉ email...">
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Quốc tịch</div>
+        <select id="f-nationality">
+          <option value="Việt Nam" selected>Việt Nam</option>
+          <option value="Khác">Quốc tịch khác</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Người cư trú</div>
+        <div class="checkbox-group">
+          <label class="checkbox-item"><input type="radio" name="resident" value="co" checked> Có</label>
+          <label class="checkbox-item"><input type="radio" name="resident" value="khong"> Không</label>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #eee; margin:14px 0; padding-top:14px;">
+        <div class="field-label" style="margin-bottom:10px;">Loại giấy tờ tùy thân</div>
+        <div class="checkbox-group" style="flex-direction:column; gap:6px;">
+          <label class="checkbox-item"><input type="radio" name="id-type" value="cccd" checked> ☐ CCCD (Căn cước công dân)</label>
+          <label class="checkbox-item"><input type="radio" name="id-type" value="cccd-chip"> ☐ Căn cước (chip điện tử)</label>
+          <label class="checkbox-item"><input type="radio" name="id-type" value="cmnd"> ☐ CMND</label>
+          <label class="checkbox-item"><input type="radio" name="id-type" value="passport"> ☐ Hộ chiếu (người nước ngoài)</label>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">Số CCCD/CMND <span class="auto-tag">QR</span></div>
+          <input type="text" id="f-cccd" placeholder="Số CCCD..." class="from-qr">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Ngày hết hạn <span class="auto-tag">QR</span></div>
+          <input type="text" id="f-expire" placeholder="DD/MM/YYYY" class="from-qr">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">Ngày cấp</div>
+          <input type="text" id="f-issue-date" placeholder="DD/MM/YYYY">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Nơi cấp</div>
+          <input type="text" id="f-issue-place" placeholder="Nơi cấp...">
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Địa chỉ thường trú <span class="auto-tag">QR</span></div>
+        <input type="text" id="f-address" placeholder="Địa chỉ thường trú..." class="from-qr">
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Nơi ở hiện tại (nếu khác)</div>
+        <input type="text" id="f-current-address" placeholder="Địa chỉ hiện tại...">
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Nơi làm việc</div>
+        <input type="text" id="f-workplace" placeholder="Tên cơ quan/đơn vị...">
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Địa chỉ nơi làm việc</div>
+        <input type="text" id="f-work-address" placeholder="Địa chỉ nơi làm việc...">
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">SĐT nơi làm việc</div>
+        <input type="tel" id="f-work-phone" placeholder="Số điện thoại cơ quan...">
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Mã số thuế cá nhân</div>
+        <input type="text" id="f-tax" placeholder="Mã số thuế (nếu có)...">
+      </div>
+
+      <div style="border-top:1px solid #eee; margin:14px 0 10px; padding-top:14px;">
+        <div class="field-label" style="margin-bottom:10px;">Nghề nghiệp</div>
+        <select id="f-job">
+          <option value="">-- Chọn nghề nghiệp --</option>
+          <option>Công chức/viên chức</option>
+          <option>Công an/bộ đội</option>
+          <option>Giáo viên/bác sĩ</option>
+          <option>Kỹ sư</option>
+          <option>Công nhân</option>
+          <option>Nông dân</option>
+          <option>Luật sư/kế toán/tư vấn tài chính</option>
+          <option>Kinh doanh tự do</option>
+          <option>Học sinh/sinh viên</option>
+          <option>Nội trợ</option>
+          <option>Khác</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Chức vụ/vị trí</div>
+        <select id="f-position">
+          <option value="">-- Chọn chức vụ --</option>
+          <option>Cán bộ nhân viên</option>
+          <option>Quản lý cấp trung (Trưởng/Phó phòng)</option>
+          <option>Giám đốc/Chủ tịch Công ty TNHH, CP không niêm yết</option>
+          <option>Chức danh tương đương tại TC, DN khác</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHẦN II -->
+  <div class="section-card">
+    <div class="section-title">🏦 II. Đăng ký mở tài khoản & dịch vụ</div>
+    <div class="section-body">
+
+      <div class="field-group">
+        <div class="field-label">Loại tài khoản thanh toán</div>
+        <div class="checkbox-group" style="flex-direction:column; gap:6px;">
+          <label class="checkbox-item"><input type="radio" name="acct-type" value="random" checked> ☐ Số TKTT ngẫu nhiên</label>
+          <label class="checkbox-item"><input type="radio" name="acct-type" value="request"> ☐ Số TKTT theo yêu cầu</label>
+          <label class="checkbox-item"><input type="radio" name="acct-type" value="special"> ☐ TKTT chuyên dùng</label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Loại tiền tệ</div>
+        <div class="checkbox-group">
+          <label class="checkbox-item"><input type="checkbox" checked> VND</label>
+          <label class="checkbox-item"><input type="checkbox"> USD</label>
+          <label class="checkbox-item"><input type="checkbox"> EUR</label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Dịch vụ đăng ký</div>
+        <div class="checkbox-group" style="flex-direction:column; gap:8px; margin-top:6px;">
+          <label class="checkbox-item"><input type="checkbox" checked> Internet Banking / Agribank E-Mobile Banking</label>
+          <label class="checkbox-item"><input type="checkbox"> Thẻ ghi nợ nội địa</label>
+          <label class="checkbox-item"><input type="checkbox"> Thẻ tín dụng</label>
+          <label class="checkbox-item"><input type="checkbox"> SMS Banking</label>
+          <label class="checkbox-item"><input type="checkbox"> Biến động số dư</label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Mục đích mở tài khoản</div>
+        <div class="checkbox-group" style="flex-direction:column; gap:6px; margin-top:6px;">
+          <label class="checkbox-item"><input type="checkbox" checked> Nhận lương/thu nhập</label>
+          <label class="checkbox-item"><input type="checkbox"> Thanh toán hóa đơn</label>
+          <label class="checkbox-item"><input type="checkbox"> Chuyển/nhận tiền</label>
+          <label class="checkbox-item"><input type="checkbox"> Tiết kiệm</label>
+          <label class="checkbox-item"><input type="checkbox"> Khác</label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Nguồn gốc tiền gửi</div>
+        <div class="checkbox-group" style="flex-direction:column; gap:6px; margin-top:6px;">
+          <label class="checkbox-item"><input type="checkbox" checked> Tiền lương/thu nhập kinh doanh</label>
+          <label class="checkbox-item"><input type="checkbox"> Tiết kiệm tích lũy</label>
+          <label class="checkbox-item"><input type="checkbox"> Từ người thân trong nước</label>
+          <label class="checkbox-item"><input type="checkbox"> Kiều hối</label>
+          <label class="checkbox-item"><input type="checkbox"> Khác</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHẦN III: KÝ -->
+  <div class="section-card">
+    <div class="section-title">✍️ III. Xác nhận</div>
+    <div class="section-body">
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">Ngày lập</div>
+          <input type="text" id="f-date" placeholder="DD/MM/YYYY">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Chi nhánh PGD</div>
+          <input type="text" id="f-branch" placeholder="Tên chi nhánh...">
+        </div>
+      </div>
+      <div style="margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:30px; text-align:center; padding:10px 0 0;">
+        <div>
+          <p style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:50px;">KHÁCH HÀNG</p>
+          <div style="border-top:1px solid #ccc; padding-top:6px; font-size:12px; color:#999;">(Ký, ghi rõ họ tên)</div>
+        </div>
+        <div>
+          <p style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:50px;">GIAO DỊCH VIÊN</p>
+          <div style="border-top:1px solid #ccc; padding-top:6px; font-size:12px; color:#999;">(Ký, ghi rõ họ tên)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-bottom-spacer"></div>
+</div>
+
+<!-- ACTION BAR -->
+<div class="action-bar" id="action-bar" style="display:none;">
+  <button class="btn-clear" onclick="clearForm()">🗑 Xóa</button>
+  <button class="btn-print" onclick="printForm()">🖨️ In hồ sơ</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let html5QrCode = null;
+let scanning = false;
+let hasData = false;
+
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('action-bar').style.display = (tab === 'form') ? 'flex' : 'none';
+}
+
+function toggleScanner() {
+  if (!scanning) {
+    startScanner();
+  } else {
+    stopScanner();
+  }
+}
+
+function startScanner() {
+  document.getElementById('reader-container').style.display = 'block';
+  document.getElementById('scan-btn-text').textContent = 'Dừng quét';
+  document.getElementById('scan-btn').classList.add('scanning');
+  scanning = true;
+
+  html5QrCode = new Html5Qrcode("reader");
+  html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 200, height: 200 } },
+    (decodedText) => {
+      stopScanner();
+      parseQRData(decodedText);
+    },
+    (err) => {}
+  ).catch(err => {
+    showToast("Không thể truy cập camera: " + err);
+    stopScanner();
+  });
+}
+
+function stopScanner() {
+  if (html5QrCode) {
+    html5QrCode.stop().catch(() => {});
+    html5QrCode = null;
+  }
+  scanning = false;
+  document.getElementById('scan-btn-text').textContent = 'Bắt đầu quét QR CCCD';
+  document.getElementById('scan-btn').classList.remove('scanning');
+  document.getElementById('reader-container').style.display = 'none';
+}
+
+function parseManual() {
+  const val = document.getElementById('manual-qr').value.trim();
+  if (!val) { showToast("Vui lòng nhập chuỗi QR"); return; }
+  parseQRData(val);
+}
+
+function parseQRData(raw) {
+  const parts = raw.split('|').map(s => s.trim());
+  if (parts.length < 3) {
+    showToast("⚠️ Dữ liệu QR không hợp lệ");
+    return;
+  }
+
+  const map = {
+    'f-cccd': parts[0] || '',
+    'f-name': parts[2] || '',
+    'f-dob':  parts[3] || '',
+    'f-address': parts[5] || '',
+    'f-expire': parts[6] || '',
+  };
+
+  Object.entries(map).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el && val) { el.value = val; el.classList.add('from-qr'); }
+  });
+
+  const gender = parts[4] || '';
+  const genderEl = document.getElementById('f-gender');
+  if (gender.toLowerCase().includes('nam') && !gender.toLowerCase().includes('nữ')) {
+    genderEl.value = 'Nam';
+  } else if (gender.toLowerCase().includes('nữ') || gender.toLowerCase().includes('nu')) {
+    genderEl.value = 'Nữ';
+  }
+
+  const today = new Date();
+  document.getElementById('f-date').value =
+    String(today.getDate()).padStart(2,'0') + '/' +
+    String(today.getMonth()+1).padStart(2,'0') + '/' +
+    today.getFullYear();
+
+  hasData = true;
+  document.getElementById('scan-success').style.display = 'block';
+  setTimeout(() => {
+    switchTab('form');
+    document.getElementById('action-bar').style.display = 'flex';
+  }, 1000);
+}
+
+function clearForm() {
+  if (!confirm('Xóa toàn bộ dữ liệu trên form?')) return;
+  document.querySelectorAll('#page-form input[type=text], #page-form input[type=tel], #page-form input[type=email], #page-form select').forEach(el => {
+    el.value = '';
+    el.classList.remove('from-qr');
+  });
+  document.getElementById('scan-success').style.display = 'none';
+  hasData = false;
+  switchTab('scan');
+  document.getElementById('action-bar').style.display = 'none';
+  showToast("Đã xóa dữ liệu");
+}
+
+function printForm() {
+  const name = document.getElementById('f-name').value;
+  if (!name) {
+    showToast("⚠️ Chưa có thông tin khách hàng!");
+    return;
+  }
+  window.print();
+}
+
+function showToast(msg, dur = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+</script>
+</body>
+</html>
